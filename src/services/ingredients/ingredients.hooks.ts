@@ -6,21 +6,14 @@ import { HookContext } from "@feathersjs/feathers";
 const { authenticate } = authentication.hooks;
 
 const checkStock = () => async (context:HookContext) => {
-/*   const sequelize = context.app.get("sequelizeClient");
-  const ingredients = sequelize.models.ingredients;
+  const newStock = context.data.stock
   
-  const currentData = await ingredients.findByPk(context.id);
-
-  const previousStock = currentData.dataValues.stock */
- /*  const newStock = context.data.stock
-
   if(newStock < 10){
-    console.log("flag")
-    const stockAlert = true 
-    
-  } */
+    context.data.stockAlert = true
+  }else{
+    context.data.stockAlert = false
+  }
 
-  console.log(context.data)
   return context;
 };
 
