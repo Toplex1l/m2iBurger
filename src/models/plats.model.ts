@@ -6,20 +6,21 @@ import { HookReturn } from 'sequelize/types/hooks';
 
 export default function (app: Application): typeof Model {
   const sequelizeClient: Sequelize = app.get('sequelizeClient');
-  const ingredients = sequelizeClient.define('ingredients', {
+  const plats = sequelizeClient.define('plats', {
     label: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    stockAlert: {
+    prix: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    isAvailable: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
     },
-    stock: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    }
+
   }, {
     hooks: {
       beforeCount(options: any): HookReturn {
@@ -29,11 +30,11 @@ export default function (app: Application): typeof Model {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  (ingredients as any).associate = function (models: any): void {
+  (plats as any).associate = function (models: any): void {
     // Define associations here
-    ingredients.hasMany(models.plats, { as: "plats" });
+    plats.hasMany(models.ingredients, { as: "ingredients" });
     // See https://sequelize.org/master/manual/assocs.html
   };
 
-  return ingredients;
+  return plats;
 }
