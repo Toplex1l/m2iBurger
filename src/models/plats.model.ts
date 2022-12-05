@@ -32,7 +32,6 @@ export default function (app: Application): typeof Model {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (plats as any).associate = function (models: any): void {
     // Define associations here
-    plats.hasMany(models.ingredients, { as: "ingredients" });
     // See https://sequelize.org/master/manual/assocs.html
   };
 
