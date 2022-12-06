@@ -23,7 +23,7 @@ export default function (app: Application): typeof Model {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (table as any).associate = function (models: any): void {
     // Define associations here
-    table.belongsTo(models.commandes, { as: "commande" })
+    table.belongsTo(models.commandes, { as: 'commande' });
     // See https://sequelize.org/master/manual/assocs.html
   };
 

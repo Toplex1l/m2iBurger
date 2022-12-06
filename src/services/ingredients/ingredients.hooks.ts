@@ -1,6 +1,6 @@
 import { HooksObject } from '@feathersjs/feathers';
 import * as authentication from '@feathersjs/authentication';
-import { HookContext } from "@feathersjs/feathers";
+import { HookContext } from '@feathersjs/feathers';
 // Don't remove this comment. It's needed to format import lines nicely.
 
 const { authenticate } = authentication.hooks;
@@ -12,7 +12,7 @@ const checkStock = () => async (context:HookContext) => {
   const currentData = await ingredients.findByPk(context.id);
 
   const previousStock = currentData.dataValues.stock */
- /*  const newStock = context.data.stock
+  /*  const newStock = context.data.stock
 
   if(newStock < 10){
     console.log("flag")
@@ -20,7 +20,7 @@ const checkStock = () => async (context:HookContext) => {
     
   } */
 
-  console.log(context.data)
+  console.log(context.data);
   return context;
 };
 

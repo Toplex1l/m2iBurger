@@ -26,8 +26,8 @@ export default function (app: Application): typeof Model {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (platsingredients as any).associate = function (models: any): void {
     // Define associations here
-    platsingredients.belongsTo(models.ingredients, { as: "ingredient" });
-    platsingredients.belongsTo(models.plats, { as: "plat" });
+    platsingredients.belongsTo(models.ingredients, { as: 'ingredient' });
+    platsingredients.belongsTo(models.plats, { as: 'plat' });
     
     // See https://sequelize.org/master/manual/assocs.html
   };
