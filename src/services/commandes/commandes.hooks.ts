@@ -3,9 +3,13 @@ import * as authentication from '@feathersjs/authentication';
 import { HookContext } from '@feathersjs/feathers';
 import { ResultSetHeader } from 'mysql2';
 import { Sequelize } from 'sequelize';
+import { Hook } from 'mocha';
 // Don't remove this comment. It's needed to format import lines nicely.
 
 const { authenticate } = authentication.hooks;
+
+
+///Ajouter commandes et lier le plats et commandes enssemble///
 
 //Methode pour generer la commande avant de la lié avec le plat 
 const commanderPlats = () => async (context: HookContext) => {
@@ -51,6 +55,7 @@ const mapagePlats= (results : any) : boolean => {
   return check;
 }
 
+
 //Methode qui si la verification des plats dispo est passer créer la commande
 const verificationPlatDispo = (platIsDisponible : boolean)=> {
   if(platIsDisponible == true){
@@ -78,25 +83,86 @@ const ajouterCommandesPlats = () => async (context: HookContext) => {
  
   return context;
 }
+///FIN Ajouter commandes et lier le plats et commandes enssemble///
 
+
+///Voir la liste des commandes et plats associer///.
+//Methode qui permet de voir les plats lié a une commande.
+const voirCommandesPLats =  () => async (context: HookContext) => {
+  const sequelize = context.app.get('sequelizeClient');
+  const query = await sequelize.query(`SELECT * from commandesplats WHERE commandId = ${context.id}`);
+  const platsAssocier = await mapageCommandePlats(query,context).then((data) => data);
+
+  context.result.platsAssocier = platsAssocier;
+}
+
+//Mapage de la tablea commandesplats 
+const mapageCommandePlats =  async (results : any,context: HookContext)  => {
+  const sequelize = context.app.get('sequelizeClient');
+  const tabPlatsId : string[] = [];
+  results[0].map((res:any,index:any) =>{
+     tabPlatsId.push(res.platId);
+  })
+  const query =  await sequelize.query(`SELECT * from plats WHERE id IN (${tabPlatsId})`);
+  return query[0];
+}
+///FIN voir la liste des commandes et plats associer.
+
+///Suppression des commandes
+
+//Mehtode qui permet de supprimer une commande en bdd.
+const supprimerCommande = () => async (context: HookContext) => {
+  const sequelize = context.app.get('sequelizeClient');
+  const { commandesplats} =
+  sequelize.models;
+  await commandesplats.destroy({
+    where:{commandId : context.id}
+  })
+
+  return context;
+}
+///FIN suppression des commandes.
+
+///Modification d'une commande 
+
+const modififerCommande = () => async (context: HookContext) => {
+
+  const verifPlatDispo = await manageCommandes(context).then(data =>  data);
+ 
+  if(verifPlatDispo){
+    const sequelize = context.app.get('sequelizeClient');
+    const { commandesplats} =
+    sequelize.models;
+     await commandesplats.destroy({
+    where:{commandId : context.id}
+  })
+  }
+  else{
+    context.id = 'undefined';
+  }
+ 
+  return context;
+}
+
+///FIN modifification d'une commande
 export default {
   before: {
-    all: [ authenticate('jwt') ],
+    all: [ authenticate('jwt')],
     find: [],
     get: [],
     create: [commanderPlats()],
     update: [],
-    patch: [],
-    remove: []
+    patch: [modififerCommande()],
+    remove: [supprimerCommande()]
   },
 
   after: {
     all: [],
     find: [],
-    get: [],
+    get: [voirCommandesPLats()],
     create: [ajouterCommandesPlats()],
     update: [],
-    patch: [],
+    patch: [ajouterCommandesPlats()],
     remove: []
   },
 
