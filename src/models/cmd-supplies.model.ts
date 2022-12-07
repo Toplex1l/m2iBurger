@@ -6,19 +6,23 @@ import { HookReturn } from 'sequelize/types/hooks';
 
 export default function (app: Application): typeof Model {
   const sequelizeClient: Sequelize = app.get('sequelizeClient');
-  const plats = sequelizeClient.define('plats', {
-    label: {
+  const cmdSupplies = sequelizeClient.define('cmd_supplies', {
+    ref: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    prix: {
+    ingredientId: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    isAvailable: {
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    isReceived: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false
+      defaultValue:false
     },
 
   }, {
@@ -30,11 +34,10 @@ export default function (app: Application): typeof Model {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  (plats as any).associate = function (models: any): void {
+  (cmdSupplies as any).associate = function (models: any): void {
     // Define associations here
-    plats.hasMany(models.platsingredients, { as: "platsingredients" })
     // See https://sequelize.org/master/manual/assocs.html
   };
 
-  return plats;
+  return cmdSupplies;
 }
