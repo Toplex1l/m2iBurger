@@ -7,6 +7,7 @@ import commandes from './commandes/commandes.service';
 import commandesplats from './commandesplats/commandesplats.service';
 import table from './table/table.service';
 import reservations from './reservations/reservations.service';
+import cmdSupplies from './cmd-supplies/cmd-supplies.service';
 // Don't remove this comment. It's needed to format import lines nicely.
 
 export default function (app: Application): void {
@@ -18,4 +19,5 @@ export default function (app: Application): void {
   app.configure(commandesplats);
   app.configure(table);
   app.configure(reservations);
+  app.configure(cmdSupplies);
 }
