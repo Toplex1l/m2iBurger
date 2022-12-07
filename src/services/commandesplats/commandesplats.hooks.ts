@@ -6,15 +6,15 @@ const { authenticate } = authentication.hooks;
 
 
 const includeAssociations = () => async (context: HookContext) => {
-  const sequelize = context.app.get("sequelizeClient");
+  const sequelize = context.app.get('sequelizeClient');
 
   const { ingredients, plats } =
     sequelize.models;
 
   context.params.sequelize = {
     include: [
-      { model: plats, as: "plat" },
-      { model: ingredients, as: "ingredient" },
+      { model: plats, as: 'plat' },
+      { model: ingredients, as: 'ingredient' },
 
     ],
     raw: false,
