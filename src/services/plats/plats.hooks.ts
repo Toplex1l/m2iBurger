@@ -52,8 +52,8 @@ const checkDispo = () => async (context:HookContext) => {
   console.log("checked")
  */
 
-  return context
-}
+  return context;
+};
 
 
 export default {

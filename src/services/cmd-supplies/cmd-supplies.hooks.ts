@@ -6,20 +6,20 @@ const { authenticate } = authentication.hooks;
 
 const addInfo = () => async (context:HookContext) => {
   //Ajoute la ref sur le create de la commande
-  const sequelize = context.app.get("sequelizeClient");
+  const sequelize = context.app.get('sequelizeClient');
   
   const [results, metadata] = await sequelize.query(`SELECT label from ingredients WHERE id = ${context.data.ingredientId}`);
 
-  const date = Date.now()
-  const ref = `cmd-${results[0].label}-${date}`
+  const date = Date.now();
+  const ref = `cmd-${results[0].label}-${date}`;
 
   context.data.ref = ref;
-  return context
+  return context;
 };
 
 const statusChange = () => async (context:HookContext) => {
   //Impute le stock quand la commande d'ingredient est reçue
-  const sequelize = context.app.get("sequelizeClient");
+  const sequelize = context.app.get('sequelizeClient');
   const [results, metadata] = await sequelize.query(`SELECT stock from ingredients WHERE id = ${context.result.ingredientId}`);
   const { ingredients } = sequelize.models;
 
@@ -28,29 +28,29 @@ const statusChange = () => async (context:HookContext) => {
   if(context.data.isReceived === true){
     try{
       if(context.params.headers){
-        const token = context.params.headers.authorization
+        const token = context.params.headers.authorization;
         const axios = require('axios').default;
 
-        let reqInstance = axios.create({
+        const reqInstance = axios.create({
           headers: {
             Authorization : token 
-            }
           }
-        )
-        const url = `http://localhost:3030/ingredients/${context.result.ingredientId}`
-        const myBody = {stock:newStock}
+        }
+        );
+        const url = `http://localhost:3030/ingredients/${context.result.ingredientId}`;
+        const myBody = {stock:newStock};
         
         await reqInstance.patch(url,myBody);
       }
 
 
     }catch(error){
-      console.log(error)
+      console.log(error);
     }
   }
 
 
-  return context
+  return context;
 };
 
 export default {
