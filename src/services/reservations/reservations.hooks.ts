@@ -1,6 +1,7 @@
 import { HookContext } from '@feathersjs/feathers';
 import * as authentication from '@feathersjs/authentication';
 import { Op, QueryTypes } from 'sequelize';
+import { format } from 'date-fns';
 // Don't remove this comment. It's needed to format import lines nicely.
 
 const { authenticate } = authentication.hooks;
@@ -30,6 +31,9 @@ const isValid = () => async (context: HookContext) => {
   // Vérifier la partie date
   const today = new Date();
   const dateParam = new Date(context.data.horaire);
+  dateParam.setHours(
+    (dateParam.getHours() * 60 + dateParam.getTimezoneOffset()) / 60
+  );
   const nbrParam = context.data.nbrPersonne;
   const time = dateParam.getHours() * 60 + dateParam.getMinutes();
   const day = dateParam.getDay();
@@ -60,18 +64,26 @@ const isValid = () => async (context: HookContext) => {
 
   let tableIds: Array<number> = [];
 
+  console.log(format(dateParam, 'yyyy-MM-dd HH:mm:SS'));
+
   const reservedtableIds = await sequelize.query(
-    '  SELECT TR.tableId FROM m_2_i_burger.TableReservations as TR INNER JOIN m_2_i_burger.reservations as R ON TR.reservationId = R.id INNER JOIN m_2_i_burger.table as T ON TR.tableId = T.id WHERE R.horaire = \'2023-09-29 10:30:00\'',
+    `SELECT TR.tableId FROM m_2_i_burger.TableReservations as TR INNER JOIN m_2_i_burger.reservations as R ON TR.reservationId = R.id INNER JOIN m_2_i_burger.table as T ON TR.tableId = T.id WHERE R.horaire = "${format(
+      dateParam,
+      'yyyy-MM-dd HH:mm:SS'
+    )}"`,
     { type: QueryTypes.SELECT }
   );
+  // const reservedtableIds = await sequelize.query(
+  //   "  SELECT TR.tableId FROM m_2_i_burger.TableReservations as TR INNER JOIN m_2_i_burger.reservations as R ON TR.reservationId = R.id INNER JOIN m_2_i_burger.table as T ON TR.tableId = T.id WHERE R.horaire = '" +
+  //     dateParam.toISOString() +
+  //     "'",
+  //   { type: QueryTypes.SELECT }
+  // );
 
   reservedtableIds.map((table: any) => {
     tableIds = [...tableIds, table.tableId];
   });
-
-  console.log('tableIds', tableIds);
-
-  const tableReservedPromises = (tableIdsArg: any) => {
+  const tableToReserve = (tableIdsArg: any) => {
     return table
       .findAll({
         attributes: ['id', 'taille'],
@@ -101,7 +113,7 @@ const isValid = () => async (context: HookContext) => {
       });
   };
 
-  tableReservedPromises(tableIds);
+  tableToReserve(tableIds);
 
   return context;
 };
@@ -120,13 +132,9 @@ const includeAssociations = () => async (context: HookContext) => {
 };
 
 const createTableReservation = () => async (context: HookContext) => {
-  // console.log('values',"afterContextresultid", context.result.id);
-  // console.log('values',"afterContext", context);
-
   // Prendre la première table de libre
   const sequelize = context.app.get('sequelizeClient');
   const { TableReservations } = sequelize.models;
-  console.log('tableAvailable', tableAvailable);
   if (tableAvailable.length > 0) {
     await TableReservations.create({
       tableId: tableAvailable[0],
@@ -138,11 +146,15 @@ const createTableReservation = () => async (context: HookContext) => {
   }
 };
 
+const showOnlyValidReservation = () => async (context: HookContext) => {
+  console.log('context', context);
+};
+
 export default {
   before: {
     all: [authenticate('jwt')],
     find: [includeAssociations()],
-    get: [includeAssociations()],
+    get: [includeAssociations(), showOnlyValidReservation()],
     create: [isValid()],
     update: [isValid()],
     patch: [isValid()],
