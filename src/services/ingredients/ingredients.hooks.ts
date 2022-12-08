@@ -6,7 +6,7 @@ import { HookContext } from '@feathersjs/feathers';
 const { authenticate } = authentication.hooks;
 
 const checkStock = () => async (context:HookContext) => {
-
+  //Vérifie les stocks d'ingredients à chaque patch du stock 
   const newStock = context.data.stock
   const sequelize = context.app.get("sequelizeClient");
   const { cmd_supplies, plats } = sequelize.models;
@@ -58,6 +58,7 @@ const checkStock = () => async (context:HookContext) => {
 
 
 const setPlatOff = ()  => async (context:HookContext) => {
+  //Vérifie la dispo des plats selon la dispo de chaque ingrédients
   const sequelize = context.app.get("sequelizeClient");
   const { plats } = sequelize.models;
   const [results, metadata] = await sequelize.query(`SELECT platId FROM platsingredients INNER JOIN ingredients ON ingredients.id = platsingredients.ingredientId WHERE stockAlert = 1;`);

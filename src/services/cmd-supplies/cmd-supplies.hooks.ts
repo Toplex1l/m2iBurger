@@ -5,6 +5,7 @@ import * as authentication from '@feathersjs/authentication';
 const { authenticate } = authentication.hooks;
 
 const addInfo = () => async (context:HookContext) => {
+  //Ajoute la ref sur le create de la commande
   const sequelize = context.app.get("sequelizeClient");
   
   const [results, metadata] = await sequelize.query(`SELECT label from ingredients WHERE id = ${context.data.ingredientId}`);
@@ -17,6 +18,7 @@ const addInfo = () => async (context:HookContext) => {
 };
 
 const statusChange = () => async (context:HookContext) => {
+  //Impute le stock quand la commande d'ingredient est reçue
   const sequelize = context.app.get("sequelizeClient");
   const [results, metadata] = await sequelize.query(`SELECT stock from ingredients WHERE id = ${context.result.ingredientId}`);
   const { ingredients } = sequelize.models;
