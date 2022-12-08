@@ -6,28 +6,37 @@ import { HookReturn } from 'sequelize/types/hooks';
 
 export default function (app: Application): typeof Model {
   const sequelizeClient: Sequelize = app.get('sequelizeClient');
-  const reservations = sequelizeClient.define('reservations', {
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false
+  const reservations = sequelizeClient.define(
+    'reservations',
+    {
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      horaire: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      nbrPersonne: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      createdAt: { type: DataTypes.DATE, defaultValue: Date.now },
+      updatedAt: { type: DataTypes.DATE, defaultValue: Date.now },
     },
-    horaire: {
-      type: DataTypes.DATE,
-      allowNull: false
+    {
+      hooks: {
+        beforeCount(options: any): HookReturn {
+          options.raw = true;
+        },
+      },
     }
-  }, {
-    hooks: {
-      beforeCount(options: any): HookReturn {
-        options.raw = true;
-      }
-    }
-  });
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (reservations as any).associate = function (models: any): void {
     // Define associations here
-    reservations.belongsTo(models.users, { as: 'user' });
-    reservations.belongsTo(models.table, { as: 'table' });
+    reservations.belongsToMany(models.table, { through: 'TableReservations' });
     // See https://sequelize.org/master/manual/assocs.html
   };
 

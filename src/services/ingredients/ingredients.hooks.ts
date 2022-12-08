@@ -1,4 +1,3 @@
-import { HooksObject } from '@feathersjs/feathers';
 import * as authentication from '@feathersjs/authentication';
 import { HookContext } from '@feathersjs/feathers';
 // Don't remove this comment. It's needed to format import lines nicely.
@@ -82,13 +81,13 @@ const setPlatOff = ()  => async (context:HookContext) => {
 };
 export default {
   before: {
-    all: [ authenticate('jwt') ],
+    all: [authenticate('jwt')],
     find: [],
     get: [],
     create: [],
     update: [],
     patch: [checkStock()],
-    remove: []
+    remove: [],
   },
 
   after: {
@@ -108,6 +107,6 @@ export default {
     create: [],
     update: [],
     patch: [],
-    remove: []
-  }
+    remove: [],
+  },
 };

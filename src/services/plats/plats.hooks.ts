@@ -1,10 +1,8 @@
-import { HooksObject } from '@feathersjs/feathers';
 import * as authentication from '@feathersjs/authentication';
 import { HookContext } from '@feathersjs/feathers';
 // Don't remove this comment. It's needed to format import lines nicely.
 
 const { authenticate } = authentication.hooks;
-
 
 const includeAssociations = () => async (context: HookContext) => {
   const sequelize = context.app.get('sequelizeClient');
@@ -21,7 +19,6 @@ const includeAssociations = () => async (context: HookContext) => {
 
   return context;
 };
-
 
 const checkDispo = () => async (context:HookContext) => {
   /* const sequelize = context.app.get("sequelizeClient");
@@ -64,7 +61,7 @@ export default {
     create: [],
     update: [],
     patch: [],
-    remove: []
+    remove: [],
   },
 
   after: {
@@ -74,7 +71,7 @@ export default {
     create: [],
     update: [],
     patch: [],
-    remove: []
+    remove: [],
   },
 
   error: {
@@ -84,6 +81,6 @@ export default {
     create: [],
     update: [],
     patch: [],
-    remove: []
-  }
+    remove: [],
+  },
 };

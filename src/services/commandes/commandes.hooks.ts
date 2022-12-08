@@ -1,4 +1,3 @@
-import { HooksObject } from '@feathersjs/feathers';
 import * as authentication from '@feathersjs/authentication';
 import { HookContext } from '@feathersjs/feathers';
 import { ResultSetHeader } from 'mysql2';
@@ -173,6 +172,6 @@ export default {
     create: [],
     update: [],
     patch: [],
-    remove: []
-  }
+    remove: [],
+  },
 };
