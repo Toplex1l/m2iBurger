@@ -203,6 +203,7 @@ const stockRefresh = () => async (context: HookContext) => {
 
   }else{
     console.log("La commande est déjà reçue")
+
   }
 
   return context
