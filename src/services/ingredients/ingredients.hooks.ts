@@ -22,7 +22,7 @@ const checkStock = () => async (context:HookContext) => {
           },
           {
             where: {  
-              id: res.platid ,
+              id: res.platid
             },
           })
 
