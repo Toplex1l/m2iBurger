@@ -8,14 +8,15 @@ import hooks from './reservations.hooks';
 // Add this service to the service type index
 declare module '../../declarations' {
   interface ServiceTypes {
-    'reservations': Reservations & ServiceAddons<any>;
+    reservations: Reservations & ServiceAddons<any>;
   }
 }
 
 export default function (app: Application): void {
   const options = {
     Model: createModel(app),
-    paginate: app.get('paginate')
+    paginate: app.get('paginate'),
+    id: app.get('id'),
   };
 
   // Initialize our service with any options it requires

@@ -6,33 +6,36 @@ import { HookReturn } from 'sequelize/types/hooks';
 
 export default function (app: Application): typeof Model {
   const sequelizeClient: Sequelize = app.get('sequelizeClient');
-  const plats = sequelizeClient.define('plats', {
-    label: {
-      type: DataTypes.STRING,
-      allowNull: false
+  const plats = sequelizeClient.define(
+    'plats',
+    {
+      label: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      prix: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      isAvailable: {
+        type: DataTypes.BOOLEAN,
+        // allowNull: false,
+        defaultValue: false,
+      },
     },
-    prix: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    isAvailable: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false
-    },
-
-  }, {
-    hooks: {
-      beforeCount(options: any): HookReturn {
-        options.raw = true;
-      }
+    {
+      hooks: {
+        beforeCount(options: any): HookReturn {
+          options.raw = true;
+        },
+      },
     }
-  });
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (plats as any).associate = function (models: any): void {
     // Define associations here
-    plats.hasMany(models.platsingredients, { as: "platsingredients" })
+    plats.hasMany(models.platsingredients, { as: 'platsingredients' });
     // See https://sequelize.org/master/manual/assocs.html
   };
 
