@@ -3,6 +3,7 @@ import { HookContext } from '@feathersjs/feathers';
 import { ResultSetHeader } from 'mysql2';
 import { Sequelize } from 'sequelize';
 import { Hook } from 'mocha';
+import { any } from 'bluebird';
 // Don't remove this comment. It's needed to format import lines nicely.
 
 const { authenticate } = authentication.hooks;
@@ -17,26 +18,28 @@ const commanderPlats = () => async (context: HookContext) => {
 };
 
 const manageCommandes = async (context : HookContext) => {
-  const sequelize = context.app.get('sequelizeClient');
-  const platsId = context.data.platsId;
-  let platsDisponible = true;
-  //Si il y'a plusieur plat envoyé on parcours le tableau
-  if(Array.isArray(platsId)){
-    //recherche en bdd les plats choisis
-    const query = await sequelize.query(`SELECT * from plats WHERE id IN (${platsId})`,{ type: sequelize.SELECT });
-    //Mapage des plat trouvé et verification de leur disponibilité 
-    platsDisponible = mapagePlats(query);
-    //Création de la commande si plats dispo
-    return verificationPlatDispo(platsDisponible); 
-  }
-  //Sinon un seul plat
-  else{
-    //Recherche en bdd le plat choisi
-    const query = await sequelize.query(`SELECT * from plats WHERE id = ${platsId}`);
-    //Mapage des plat trouvé et verification de leur disponibilité 
-    platsDisponible = mapagePlats(query);
-    //Création de la commande si plats dispo
-    return verificationPlatDispo(platsDisponible); 
+  if(context.data.platsId){
+    const sequelize = context.app.get('sequelizeClient');
+    const platsId = context.data.platsId;
+    let platsDisponible = true;
+    //Si il y'a plusieur plat envoyé on parcours le tableau
+    if(Array.isArray(platsId)){
+      //recherche en bdd les plats choisis
+      const query = await sequelize.query(`SELECT * from plats WHERE id IN (${platsId})`,{ type: sequelize.SELECT });
+      //Mapage des plat trouvé et verification de leur disponibilité 
+      platsDisponible = mapagePlats(query);
+      //Création de la commande si plats dispo
+      return verificationPlatDispo(platsDisponible); 
+    }
+    //Sinon un seul plat
+    else{
+      //Recherche en bdd le plat choisi
+      const query = await sequelize.query(`SELECT * from plats WHERE id = ${platsId}`);
+      //Mapage des plat trouvé et verification de leur disponibilité 
+      platsDisponible = mapagePlats(query);
+      //Création de la commande si plats dispo
+      return verificationPlatDispo(platsDisponible); 
+    }
   }
 };
 
@@ -67,19 +70,20 @@ const verificationPlatDispo = (platIsDisponible : boolean)=> {
 
 //Methode pour lié la commande generer aux plats commandés dans la table commandesplats.
 const ajouterCommandesPlats = () => async (context: HookContext) => {
-  const sequelize = context.app.get('sequelizeClient');
-  const platsId = context.data.platsId;
-  const { commandesplats} =
-  sequelize.models;
-  if(Array.isArray(platsId)){
-    platsId.forEach((idPlat: any) => {
-      commandesplats.create({'platId': idPlat, 'commandId': context.result.id});
-    }); 
+  if(context.data.platsId){
+    const sequelize = context.app.get('sequelizeClient');
+    const platsId = context.data.platsId;
+    const { commandesplats} =
+    sequelize.models;
+    if(Array.isArray(platsId)){
+      platsId.forEach((idPlat: any) => {
+        commandesplats.create({'platId': idPlat, 'commandId': context.result.id});
+      }); 
+    }
+    else{
+      commandesplats.create({'platId': platsId, 'commandId': context.result.id});
+    }
   }
-  else{
-    commandesplats.create({'platId': platsId, 'commandId': context.result.id});
-  }
- 
   return context;
 };
 ///FIN Ajouter commandes et lier le plats et commandes enssemble///
@@ -125,23 +129,76 @@ const supprimerCommande = () => async (context: HookContext) => {
 ///Modification d'une commande 
 
 const modififerCommande = () => async (context: HookContext) => {
+  if(context.data.platsId){
+    const verifPlatDispo = await manageCommandes(context).then(data =>  data);
+    console.log(verifPlatDispo)
+    if(verifPlatDispo){
+      console.log("here")
+      const sequelize = context.app.get('sequelizeClient');
+      const { commandesplats} =
+      sequelize.models;
+      await commandesplats.destroy({
+        where:{commandId : context.id}
+      });
+    }
+    else{
+      context.id = 'undefined';
+    }
+  }
 
-  const verifPlatDispo = await manageCommandes(context).then(data =>  data);
- 
-  if(verifPlatDispo){
-    const sequelize = context.app.get('sequelizeClient');
-    const { commandesplats} =
-    sequelize.models;
-    await commandesplats.destroy({
-      where:{commandId : context.id}
-    });
-  }
-  else{
-    context.id = 'undefined';
-  }
- 
   return context;
 };
+
+
+const stockRefresh = () => async (context: HookContext) => {
+  const sequelize = context.app.get('sequelizeClient');
+  
+  console.log(context.data.isDeliver)
+  if(context.data.isDeliver === true || context.data.isDeliver === 1){
+    //Récupère tout les plats de la commande et les place dans un array
+    const [results, metadata] = await sequelize.query(`SELECT platId from commandesplats WHERE commandId = ${context.id}`);
+
+    let platList : Array<number> = []
+    results.map((plat:any) => {
+      platList.push(plat.platId)
+    })
+
+
+    //Pour chaque plat récupère la liste d'ingredients 
+    if(platList){
+      const [res] = await sequelize.query(
+        `SELECT ingredientId, stock 
+        FROM platsingredients 
+        INNER JOIN ingredients ON ingredients.id = platsingredients.ingredientId 
+        WHERE platId IN (${platList})`);
+
+      res.map(async (ingredient:any) => {
+        try{
+          if(context.params.headers){
+            const newStock = ingredient.stock - 1;
+            const token = context.params.headers.authorization;
+            const axios = require('axios').default;
+    
+            const reqInstance = axios.create({
+              headers: {
+                Authorization : token 
+              }
+            }
+            );
+            const url = `http://localhost:3030/ingredients/${ingredient.ingredientId}`;
+            const myBody = {stock:newStock};
+            
+            await reqInstance.patch(url,myBody);
+          }
+        }catch(error){
+          console.log(error);
+        }
+      })
+    }
+  }
+
+  return context
+}
 
 ///FIN modifification d'une commande
 export default {
@@ -151,7 +208,7 @@ export default {
     get: [],
     create: [commanderPlats()],
     update: [],
-    patch: [modififerCommande()],
+    patch: [modififerCommande(), stockRefresh()],
     remove: [supprimerCommande()]
   },
 

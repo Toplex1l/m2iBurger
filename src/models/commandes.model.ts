@@ -10,6 +10,11 @@ export default function (app: Application): typeof Model {
     ref: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    isDeliver:{
+      type: DataTypes.BOOLEAN,
+      allowNull:false,
+      defaultValue: false
     }
   }, {
     hooks: {
