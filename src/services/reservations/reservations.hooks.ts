@@ -10,23 +10,23 @@ const { authenticate } = authentication.hooks;
 const hourStart = 11 * 60 + 30;
 // heure d'fermeture 16 h 30
 const hourEnd = 16 * 60 + 30;
-// jours de fermeture 1 = lundi et 4 = jeudi
-const daysOff = [1, 4];
+// jours de fermeture 1 = lundi (dans un tableau - pour ajouter d'autres dayOff... un jour)
+const dayOff = [1];
 // horaires de réservation ex : 11h30 12h30 13h30 14h30 15h30 16h30
-const validHours = [
-  11 * 60 + 30,
-  12 * 60 + 30,
-  13 * 60 + 30,
-  14 * 60 + 30,
-  15 * 60 + 30,
-  16 * 60 + 30,
-];
+// const validHours = [
+//   11 * 60 + 30,
+//   12 * 60 + 30,
+//   13 * 60 + 30,
+//   14 * 60 + 30,
+//   15 * 60 + 30,
+//   16 * 60 + 30,
+// ];
 
 // Vérifier si l'heure de réservation est possible
 let tableAvailable: Array<number> = [];
 const isValid = () => async (context: HookContext) => {
   const sequelize = context.app.get('sequelizeClient');
-  const { table } = sequelize.models;
+  const { table, restaurant } = sequelize.models;
 
   // Vérifier la partie date
   const today = new Date();
@@ -34,9 +34,32 @@ const isValid = () => async (context: HookContext) => {
   dateParam.setHours(
     (dateParam.getHours() * 60 + dateParam.getTimezoneOffset()) / 60
   );
+  let validHours: number[] = [];
   const nbrParam = context.data.nbrPersonne;
   const time = dateParam.getHours() * 60 + dateParam.getMinutes();
   const day = dateParam.getDay();
+
+  //R.id = 1 => restaurant m2i Burger
+  const validHoursCall = await sequelize.query(
+    `SELECT T.validHour
+    FROM m_2_i_burger.restaurant as R
+    INNER JOIN m_2_i_burger.timezone as T ON R.id = T.restaurantId
+    WHERE R.id = 1`,
+    { type: QueryTypes.SELECT }
+  );
+
+  const restauData = await sequelize.query(
+    `SELECT *
+    FROM m_2_i_burger.restaurant as R
+    WHERE R.id = 1`,
+    { type: QueryTypes.SELECT }
+  );
+
+  validHoursCall.map((item: any) => {
+    console.log(item.validHour);
+    validHours = [...validHours, item.validHour];
+  });
+
   if (dateParam.getTime() < today.getTime()) {
     // Retourne une erreur et bloque la creation
     throw new Error('Réservez dans le futur');
@@ -51,7 +74,7 @@ const isValid = () => async (context: HookContext) => {
   if (throwError) {
     throw new Error('Réservez pendant les zone de réservation');
   }
-  daysOff.map((dayOff) => {
+  dayOff.map((dayOff) => {
     if (dayOff == day) {
       throw new Error('Réservez pendant les jours d\'ouverture');
     }
@@ -73,12 +96,6 @@ const isValid = () => async (context: HookContext) => {
     )}"`,
     { type: QueryTypes.SELECT }
   );
-  // const reservedtableIds = await sequelize.query(
-  //   "  SELECT TR.tableId FROM m_2_i_burger.TableReservations as TR INNER JOIN m_2_i_burger.reservations as R ON TR.reservationId = R.id INNER JOIN m_2_i_burger.table as T ON TR.tableId = T.id WHERE R.horaire = '" +
-  //     dateParam.toISOString() +
-  //     "'",
-  //   { type: QueryTypes.SELECT }
-  // );
 
   reservedtableIds.map((table: any) => {
     tableIds = [...tableIds, table.tableId];

@@ -9,6 +9,7 @@ import table from './table/table.service';
 import reservations from './reservations/reservations.service';
 import cmdSupplies from './cmd-supplies/cmd-supplies.service';
 import restaurant from './restaurant/restaurant.service';
+import timezone from './timezone/timezone.service';
 // Don't remove this comment. It's needed to format import lines nicely.
 
 export default function (app: Application): void {
@@ -22,4 +23,5 @@ export default function (app: Application): void {
   app.configure(reservations);
   app.configure(cmdSupplies);
   app.configure(restaurant);
+  app.configure(timezone);
 }
