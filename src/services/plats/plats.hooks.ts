@@ -10,18 +10,54 @@ const includeAssociations = () => async (context: HookContext) => {
   const { platsingredients } = sequelize.models;
 
   context.params.sequelize = {
-    include: [{ model: platsingredients, as: 'platsingredients' }],
+    include: [
+      { model: platsingredients, as: 'platsingredients' },
+
+    ],
     raw: false,
   };
 
   return context;
 };
 
+const checkDispo = () => async (context:HookContext) => {
+  /* const sequelize = context.app.get("sequelizeClient");
+  const { platsingredients } = sequelize.models;
+
+  if(context.method === 'get'){
+    console.log("get")
+    //Sur id 
+    try{
+      const [data] = await platsingredients.findAll({
+        attributes: ['id'],
+        where: {
+          platId: context.id
+        }
+      })
+
+      console.log(data)
+    }catch(error){
+     
+    }
+  }else{
+    console.log("find")
+    //general 
+  }
+  
+  
+  
+  console.log("checked")
+ */
+
+  return context;
+};
+
+
 export default {
   before: {
-    all: [authenticate('jwt')],
-    find: [includeAssociations()],
-    get: [includeAssociations()],
+    all: [ authenticate('jwt') ],
+    find: [includeAssociations(), checkDispo()],
+    get: [includeAssociations(), checkDispo()],
     create: [],
     update: [],
     patch: [],

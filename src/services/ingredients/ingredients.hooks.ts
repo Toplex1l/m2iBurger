@@ -4,25 +4,81 @@ import { HookContext } from '@feathersjs/feathers';
 
 const { authenticate } = authentication.hooks;
 
-const checkStock = () => async (context: HookContext) => {
-  /*   const sequelize = context.app.get("sequelizeClient");
-  const ingredients = sequelize.models.ingredients;
-
-  const currentData = await ingredients.findByPk(context.id);
-
-  const previousStock = currentData.dataValues.stock */
-  /*  const newStock = context.data.stock
+const checkStock = () => async (context:HookContext) => {
+  //Vérifie les stocks d'ingredients à chaque patch du stock 
+  const newStock = context.data.stock;
+  const sequelize = context.app.get('sequelizeClient');
+  const { cmd_supplies, plats } = sequelize.models;
 
   if(newStock < 10){
-    console.log("flag")
-    const stockAlert = true
+    context.data.stockAlert = true;
+    const [results, metadata] = await sequelize.query(`SELECT platid from platsingredients WHERE ingredientid = ${context.id}`);
+      
+    (results.map((res:any, index:any) => {
+      try{
+        plats.update({
+          isAvailable: false
+        },
+        {
+          where: {  
+            id: res.platid ,
+          },
+        });
 
-  } */
+      }catch(error){
+        console.log(error);
+      }
+    })
+    );
+    console.log('L\'ingredient doit être recommander ');
 
-  console.log(context.data);
+  }else{
+    context.data.stockAlert = false;
+
+    const [res] = await sequelize.query(`SELECT platid from platsingredients WHERE ingredientid = ${context.id}`);
+    (res.map((item:any, index:any) => {
+      try{
+        plats.update({
+          isAvailable: true
+        },
+        {
+          where: {  
+            id: item.platid ,
+          },
+        });
+      }catch(error){
+        console.log(error);
+      }
+    })
+    );
+  }
   return context;
 };
 
+
+const setPlatOff = ()  => async (context:HookContext) => {
+  //Vérifie la dispo des plats selon la dispo de chaque ingrédients
+  const sequelize = context.app.get('sequelizeClient');
+  const { plats } = sequelize.models;
+  const [results, metadata] = await sequelize.query('SELECT platId FROM platsingredients INNER JOIN ingredients ON ingredients.id = platsingredients.ingredientId WHERE stockAlert = 1;');
+  if(results){
+    results.map((item:any, index:any) => {
+      try{
+        plats.update({
+          isAvailable: false
+        },
+        {
+          where: {  
+            id: item.platId ,
+          },
+        });
+      }catch(error){
+        console.log(error);
+      }
+    });
+  }
+  return context;
+};
 export default {
   before: {
     all: [authenticate('jwt')],
@@ -40,8 +96,8 @@ export default {
     get: [],
     create: [],
     update: [],
-    patch: [],
-    remove: [],
+    patch: [setPlatOff()],
+    remove: []
   },
 
   error: {
