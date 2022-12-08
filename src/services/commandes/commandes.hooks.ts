@@ -153,48 +153,56 @@ const modififerCommande = () => async (context: HookContext) => {
 const stockRefresh = () => async (context: HookContext) => {
   const sequelize = context.app.get('sequelizeClient');
   
-  console.log(context.data.isDeliver)
-  if(context.data.isDeliver === true || context.data.isDeliver === 1){
-    //Récupère tout les plats de la commande et les place dans un array
-    const [results, metadata] = await sequelize.query(`SELECT platId from commandesplats WHERE commandId = ${context.id}`);
+  const [isDeliver, metadata] = await sequelize.query(`SELECT isDeliver from commandes WHERE id = ${context.id}`);
 
-    let platList : Array<number> = []
-    results.map((plat:any) => {
-      platList.push(plat.platId)
-    })
+  //If pour vérifier si la commande est déjà en recu et ne pas imputer les stocks deux fois 
+  if(isDeliver[0].isDeliver != 1){
 
-
-    //Pour chaque plat récupère la liste d'ingredients 
-    if(platList){
-      const [res] = await sequelize.query(
-        `SELECT ingredientId, stock 
-        FROM platsingredients 
-        INNER JOIN ingredients ON ingredients.id = platsingredients.ingredientId 
-        WHERE platId IN (${platList})`);
-
-      res.map(async (ingredient:any) => {
-        try{
-          if(context.params.headers){
-            const newStock = ingredient.stock - 1;
-            const token = context.params.headers.authorization;
-            const axios = require('axios').default;
-    
-            const reqInstance = axios.create({
-              headers: {
-                Authorization : token 
-              }
-            }
-            );
-            const url = `http://localhost:3030/ingredients/${ingredient.ingredientId}`;
-            const myBody = {stock:newStock};
-            
-            await reqInstance.patch(url,myBody);
-          }
-        }catch(error){
-          console.log(error);
-        }
+    if(context.data.isDeliver === true || context.data.isDeliver === 1){
+      //Récupère tout les plats de la commande et les place dans un array
+      const [results, metadata] = await sequelize.query(`SELECT platId from commandesplats WHERE commandId = ${context.id}`);
+  
+      let platList : Array<number> = []
+      results.map((plat:any) => {
+        platList.push(plat.platId)
       })
+  
+  
+      //Pour chaque plat récupère la liste d'ingredients 
+      if(platList){
+        const [res] = await sequelize.query(
+          `SELECT ingredientId, stock 
+          FROM platsingredients 
+          INNER JOIN ingredients ON ingredients.id = platsingredients.ingredientId 
+          WHERE platId IN (${platList})`);
+  
+        res.map(async (ingredient:any) => {
+          try{
+            if(context.params.headers){
+              const newStock = ingredient.stock - 1;
+              const token = context.params.headers.authorization;
+              const axios = require('axios').default;
+      
+              const reqInstance = axios.create({
+                headers: {
+                  Authorization : token 
+                }
+              }
+              );
+              const url = `http://localhost:3030/ingredients/${ingredient.ingredientId}`;
+              const myBody = {stock:newStock};
+              
+              await reqInstance.patch(url,myBody);
+            }
+          }catch(error){
+            console.log(error);
+          }
+        })
+      }
     }
+
+  }else{
+    console.log("La commande est déjà reçue")
   }
 
   return context
