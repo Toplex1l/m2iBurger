@@ -1,13 +1,13 @@
 // See https://sequelize.org/master/manual/model-basics.html
 // for more of what you can do here.
-import { Sequelize, DataTypes, Model } from "sequelize";
-import { Application } from "../declarations";
-import { HookReturn } from "sequelize/types/hooks";
+import { Sequelize, DataTypes, Model } from 'sequelize';
+import { Application } from '../declarations';
+import { HookReturn } from 'sequelize/types/hooks';
 
 export default function (app: Application): typeof Model {
-  const sequelizeClient: Sequelize = app.get("sequelizeClient");
+  const sequelizeClient: Sequelize = app.get('sequelizeClient');
   const reservations = sequelizeClient.define(
-    "reservations",
+    'reservations',
     {
       name: {
         type: DataTypes.STRING,
@@ -36,7 +36,7 @@ export default function (app: Application): typeof Model {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (reservations as any).associate = function (models: any): void {
     // Define associations here
-    reservations.belongsToMany(models.table, { through: "TableReservations" });
+    reservations.belongsToMany(models.table, { through: 'TableReservations' });
     // See https://sequelize.org/master/manual/assocs.html
   };
 
