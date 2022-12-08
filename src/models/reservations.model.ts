@@ -26,8 +26,8 @@ export default function (app: Application): typeof Model {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (reservations as any).associate = function (models: any): void {
     // Define associations here
-    reservations.belongsTo(models.users, { as: "user" })
-    reservations.belongsTo(models.table, { as: "table" })
+    reservations.belongsTo(models.users, { as: 'user' });
+    reservations.belongsTo(models.table, { as: 'table' });
     // See https://sequelize.org/master/manual/assocs.html
   };
 
